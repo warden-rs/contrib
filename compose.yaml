@@ -1,0 +1,52 @@
+services:
+  valkey:
+    image: valkey/valkey:8.0.2-alpine
+    command: "valkey-server --port 6379"
+    ports:
+      - "6379:6379"
+    networks:
+      - warden
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli -p 6379 ping | grep PONG"]
+      interval: 1s
+      timeout: 3s
+      retries: 5
+
+  warden-db:
+    image: postgres:17.4
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      PGDATA: /data/postgres
+    ports:
+      - "5432:5432"
+    networks:
+      - warden
+    volumes:
+      - warden-db:/data/postgres
+      - ./init-db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  nats:
+    image: nats:2.11-alpine
+    entrypoint: nats-server
+    command: ["--js", "-m", "8222"]
+    volumes:
+      - nats-data:/data
+    networks:
+      - warden
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+
+networks:
+  warden:
+
+volumes:
+  nats-data:
+  warden-db:
