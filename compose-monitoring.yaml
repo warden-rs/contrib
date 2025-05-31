@@ -72,7 +72,7 @@ services:
       - --enable-feature=exemplar-storage
       - --enable-feature=native-histograms
     volumes:
-      - "./config/prometheus.yml:/etc/prometheus/prometheus.yml"
+      - "./config/prometheus.yml:/etc/prometheus.yaml"
     ports:
       - "9090:9090"
     networks:
