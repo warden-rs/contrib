@@ -1,0 +1,49 @@
+permissions:
+  contents: read
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+name: docker-stack
+jobs:
+  docker-compose-check:
+    runs-on: ubuntu-latest
+    name: docker compose up
+    steps:
+      - uses: actions/checkout@v4
+      - name: start stack
+        run: |
+          docker compose -f compose.yaml -f compose-monitoring.yaml up -d
+          sleep 30
+      - name: check for exits (ignore allowed exits)
+        run: |
+          echo "Checking for crashed or exited containers..."
+          allowed_exits=("warden-contrib-init-1")
+          crashed=()
+          for container in $(docker ps -a --filter "status=exited" --format "{{.Names}}"); do
+            skip=false
+            for allowed in "${allowed_exits[@]}"; do
+              if [ "$container" = "$allowed" ]; then
+                skip=true
+                break
+              fi
+            done
+            if [ "$skip" = false ]; then
+              crashed+=("$container")
+            fi
+          done
+          if [ "${#crashed[@]}" -gt 0 ]; then
+            echo "These containers exited unexpectedly:"
+            for c in "${crashed[@]}"; do
+              echo " - $c"
+              docker logs "$c" || true
+            done
+            exit 1
+          fi
+      - name: stop stack
+        if: always()
+        run: docker compose -f compose.yaml -f compose-monitoring.yaml down -v
