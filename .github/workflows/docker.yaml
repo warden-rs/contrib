@@ -8,11 +8,11 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
   cancel-in-progress: true
-name: docker-stack
+name: docker
 jobs:
   docker-compose-check:
     runs-on: ubuntu-latest
-    name: docker compose up
+    name: compose up
     steps:
       - uses: actions/checkout@v4
       - name: start stack
@@ -22,7 +22,7 @@ jobs:
       - name: check for exits (ignore allowed exits)
         run: |
           echo "Checking for crashed or exited containers..."
-          allowed_exits=("warden-contrib-init-1")
+          allowed_exits=("contrib-init-1")
           crashed=()
           for container in $(docker ps -a --filter "status=exited" --format "{{.Names}}"); do
             skip=false
