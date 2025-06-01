@@ -16,7 +16,7 @@ services:
       - warden
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.0.1
     environment:
       - GF_PATHS_PROVISIONING=/etc/grafana/provisioning
       - GF_AUTH_ANONYMOUS_ENABLED=true
