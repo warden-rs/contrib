@@ -1,6 +1,6 @@
 services:
   valkey:
-    image: valkey/valkey:8.1.9-alpine
+    image: valkey/valkey:8.1.10-alpine
     command: "valkey-server --port 6379"
     ports:
       - "6379:6379"
